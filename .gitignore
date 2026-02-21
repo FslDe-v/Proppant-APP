@@ -22,3 +22,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python
+backend/.venv/
+backend/__pycache__/
+*.pyc
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+
+# Local run artifacts
+backend/runs/
+sample_data/frames/
+
+# Model weights (don’t commit huge files)
+backend/models/*.pt
+backend/models/*.onnx
+
+# OS
+.DS_Store
