@@ -62,7 +62,7 @@ npm run dev
 
 ---
 
-# Dev mode camera simulation (Mac)
+## Dev mode camera simulation (Mac)
 
 In development, the backend reads images from:
 
