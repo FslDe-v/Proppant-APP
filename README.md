@@ -1,146 +1,84 @@
-# Proppant Analyzer Web App (FastAPI + React)
+💎 Proppant Analyzer Web App
+FastAPI + React
+A lightweight, high-performance web application designed to simulate and execute the proppant classification workflow. This tool bridges the gap between AI model development and end-user reporting.
 
-This repository contains a lightweight web application that simulates the proppant classification workflow:
+🚀 The Workflow
+Start Test ➔ Capture Frame ➔ Run AI Inference ➔ Visualize Results ➔ Export Report
 
-**Start test → capture frame → run AI inference → show results → export report**
+[!NOTE]
+This application is built for inference only. Model training is a separate offline process. The architecture is designed so AI developers can update models without touching the UI or API routes.
 
-The software is designed so the AI developer can integrate a trained model **without changing the UI**.  
-Training should happen **offline** (separate step). The web app runs **inference only**.
+🛠️ Tech Stack
+Backend: FastAPI (Python 3.10+)
 
----
+Frontend: React.js
 
-## Repository Structure
+Inference: Custom AI Model Integration (via model_provider.py)
 
-proppant-app/
-backend/ # FastAPI server (camera+AI+reports)
-main.py
-ml/ # (recommended) model integration lives here
-models/ # model weights (not committed)
-runs/ # run artifacts (auto-generated, not committed)
-requirements.txt
-frontend/ # React UI
-src/
-sample_data/frames/ # dev-mode images (simulates camera input)
+📂 Repository Structure
+Plaintext
+├── backend/ # FastAPI server logic
+│ ├── main.py # API entry point
+│ ├── ml/ # Model integration logic (Recommended)
+│ ├── models/ # Model weights (.pt) - Git ignored
+│ ├── runs/ # Auto-generated artifacts - Git ignored
+│ └── requirements.txt # Python dependencies
+├── frontend/ # React UI source code
+└── sample_data/ # Dev-mode images for camera simulation
+⏱️ Quick Start (Mac Development)
 
----
+1. Backend Setup
+   Bash
+   cd backend
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   uvicorn main:app --reload --port 8000
+   Health Check: http://127.0.0.1:8000/health
 
-## Quick Start (Mac Dev)
+API Docs: http://127.0.0.1:8000/docs
 
-### Backend
+2. Frontend Setup
+   Bash
+   cd frontend
+   npm install
+   npm run dev
+   🧠 AI Model Integration
+   Inference Contract
+   To keep the UI stable, the backend expects the model to return a consistent JSON shape.
 
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+Minimum Required Fields:
 
-Check:
-
-http://127.0.0.1:8000/health
-
-http://127.0.0.1:8000/docs
-
-Frontend
-cd frontend
-npm install
-npm run dev
-Dev Mode Input (Camera Simulation)
-
-In Mac dev mode, the backend reads images from:
-
-sample_data/frames/
-
-Add a few images there (.jpg / .png) to test the full flow.
-
-Run Artifacts (Outputs)
-
-Each test creates a run folder:
-
-backend/runs/<run_id>/run_meta.json
-
-backend/runs/<run_id>/results/<frame_name>.json
-
-backend/runs/<run_id>/export_summary.json
-
-These are local artifacts and should not be committed.
-
-AI Model Integration (Inference-Only)
-Goal
-
-Use a pre-trained model (weights file) and run inference for each test.
-
-✅ Load model once at backend startup
-✅ Run inference per request
-❌ Do NOT train when the web app starts
-
-Training is a separate offline workflow.
-
-Where to put the model
-
-Place weights in:
-
-backend/models/best.pt (default)
-
-Recommended .gitignore entries:
-
-backend/models/*.pt
-
-backend/runs/
-
-backend/.venv/
-
-frontend/node_modules/
-
-sample_data/frames/
-
-Environment variable (optional)
-
-Override model path without editing code:
-
-MODEL_PATH=backend/models/best.pt uvicorn main:app --reload --port 8000
-Standard Inference Output Contract (Important)
-
-To keep the UI stable, the backend expects inference to return a consistent JSON shape.
-
-Minimum required fields
+JSON
 {
-  "decision": "PASS|NEEDS_RETEST|FAIL",
-  "confidence": 0.0,
-  "mean_size_um": 0.0,
-  "psd_bins_um": [10,20,30],
-  "psd_counts": [1,5,2]
+"decision": "PASS | NEEDS_RETEST | FAIL",
+"confidence": 0.92,
+"mean_size_um": 650.0,
+"psd_bins_um": [10, 20, 30],
+"psd_counts": [1, 5, 2]
 }
-Recommended extra fields (for full UI metrics)
-{
-  "in_spec_pct": 0.0,
-  "oversize_pct": 0.0,
-  "fines_pct": 0.0,
-  "overlay_path": null
-}
-Decision rule (must be enforced)
+Recommended Implementation Pattern:
+To ensure a clean separation of concerns, implement your logic in backend/ml/model_provider.py:
 
-Output PASS only if confidence ≥ 0.90
-
-Otherwise output NEEDS_RETEST
-
-Recommended Integration Pattern (Clean Separation)
-
-To keep backend/main.py clean, implement the model logic in:
-
-backend/ml/model_provider.py
-
-Suggested interface:
-
+Python
 class ModelProvider:
-    def load(self): ...
-    def predict(self, image_path: str) -> dict: ...
+def load(self): # Load the model once at startup
+pass
 
-The backend should:
+    def predict(self, image_path: str) -> dict:
+        # Run inference and return the JSON contract
+        pass
 
-load the model once at startup
+📊 Run Artifacts
+Each test generates a local folder in backend/runs/<run_id>/ containing:
 
-call predict(image_path) inside /run/infer
+run_meta.json: Test metadata.
 
-This allows the AI developer to modify model logic freely without touching API routes.
-```
+results/<frame_name>.json: Specific frame inference data.
+
+export_summary.csv: Final processed report.
+
+⚙️ Configuration
+Environment Variables:
+You can override the model path without editing code:
+MODEL_PATH=backend/models/best.pt uvicorn main:app --reload
